@@ -76,7 +76,7 @@ html[data-theme="dark"] .icon-btn .icon-moon{ display:none;}
 .cat-en{ margin-top:8px; font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:var(--accent);}
 .cat-desc{ margin-top:14px; font-size:13px; color:var(--muted); line-height:1.7; max-width:540px;}
 
-.card{ background:var(--surface); border:1px solid var(--hairline); border-radius:18px; box-shadow:var(--shadow);}
+.card{ position:relative; z-index:2; background:var(--surface); border:1px solid var(--hairline); border-radius:18px; box-shadow:var(--shadow);}
 .conv{ padding:26px 28px;}
 .conv-row{ display:flex; align-items:flex-end; gap:16px;}
 .conv-cell{ flex:1; min-width:0;}
@@ -107,13 +107,13 @@ html[data-theme="dark"] .icon-btn .icon-moon{ display:none;}
 .unitpick.open .dd-btn{ border-color:var(--accent);}
 .unitpick.open .dd-btn svg{ transform:rotate(180deg);}
 .dd-list{
-  position:absolute; z-index:30; top:calc(100% + 6px); left:0; right:0;
+  position:absolute; z-index:50; top:calc(100% + 6px); left:0; right:0;
   background:var(--surface); border:1px solid var(--hairline); border-radius:12px;
-  box-shadow:var(--shadow); max-height:262px; overflow:auto; padding:6px;
+  box-shadow:var(--shadow); max-height:min(460px, 72vh); overflow:auto; padding:6px;
 }
 .dd-item{
   display:flex; align-items:center; justify-content:space-between; width:100%;
-  padding:9px 12px; border-radius:8px; font-size:14px; color:var(--ink-2); text-align:left;
+  padding:7px 12px; border-radius:8px; font-size:14px; color:var(--ink-2); text-align:left;
 }
 .dd-item:hover, .dd-item:focus{ background:var(--accent-soft); color:var(--ink); outline:none;}
 .dd-item.active{ color:var(--accent-ink); font-weight:600;}
@@ -140,7 +140,7 @@ html[data-theme="dark"] .icon-btn .icon-moon{ display:none;}
   font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted);
 }
 .table-cap .hint{ font-size:11px; letter-spacing:.04em; text-transform:none;}
-.table-wrap{ overflow-x:auto; border:1px solid var(--hairline); border-radius:18px; background:var(--surface); box-shadow:var(--shadow);}
+.table-wrap{ position:relative; z-index:1; overflow-x:auto; border:1px solid var(--hairline); border-radius:18px; background:var(--surface); box-shadow:var(--shadow);}
 table.units{ width:100%; border-collapse:collapse; min-width:600px;}
 .units th{
   text-align:left; font-size:10px; letter-spacing:.18em; text-transform:uppercase;
@@ -178,7 +178,7 @@ table.units{ width:100%; border-collapse:collapse; min-width:600px;}
 
 /* ---------- animation ---------- */
 @keyframes rise{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:none;} }
-.stage-anim > *{ animation:rise .42s ease both;}
+.stage-anim > *{ animation:rise .42s ease;}
 .stage-anim > *:nth-child(2){ animation-delay:.05s;}
 .stage-anim > *:nth-child(3){ animation-delay:.10s;}
 .stage-anim > *:nth-child(4){ animation-delay:.14s;}
@@ -624,6 +624,21 @@ function openPickEl(id){
   openPick = id;
   const list = w.querySelector('.dd-list');
   list.hidden = false;
+  // smart open direction: if not enough room below, open upward
+  const br = w.querySelector('.dd-btn').getBoundingClientRect();
+  const spaceBelow = window.innerHeight - br.bottom;
+  const spaceAbove = br.top;
+  const naturalH = list.scrollHeight + 4;
+  const cap = h => Math.min(460, Math.max(150, h)) + 'px';
+  if (spaceBelow < naturalH && spaceAbove > spaceBelow){
+    list.style.top = 'auto';
+    list.style.bottom = 'calc(100% + 6px)';
+    list.style.maxHeight = cap(spaceAbove - 10);
+  } else {
+    list.style.top = 'calc(100% + 6px)';
+    list.style.bottom = 'auto';
+    list.style.maxHeight = cap(spaceBelow - 10);
+  }
   const active = list.querySelector('.dd-item.active') || list.firstElementChild;
   if (active) active.focus();
 }
