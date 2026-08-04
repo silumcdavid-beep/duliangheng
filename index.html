@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>度量衡 · 单位换算器</title>
+<meta name="description" content="高级简约的计量与单位换算工具：长度、重量、面积、体积、温度、时间、速度、数据、压力、功率、能量、角度。离线可用。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%231B1A17'/%3E%3Ctext%20x='32'%20y='43'%20font-size='32'%20text-anchor='middle'%20fill='%23C99A5B'%20font-family='serif'%3E衡%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Songti SC", "STSong", "SimSun", "Noto Serif SC", Georgia, serif;
+  --bg:#F4F2EE; --surface:#FBFAF8; --surface-2:#F0EDE7;
+  --ink:#1B1A17; --ink-2:#55524B; --muted:#969187;
+  --hairline:#E3DFD7; --hairline-2:#D4CEC4;
+  --accent:#A06E35; --accent-ink:#8A5C28; --accent-soft:rgba(160,110,53,.09);
+  --shadow:0 1px 2px rgba(27,26,23,.04), 0 8px 24px rgba(27,26,23,.05);
+}
+html[data-theme="dark"]{
+  --bg:#131211; --surface:#1B1917; --surface-2:#211F1C;
+  --ink:#EDEAE3; --ink-2:#A8A398; --muted:#6E6A61;
+  --hairline:#2C2924; --hairline-2:#3A352D;
+  --accent:#C99A5B; --accent-ink:#D9AE74; --accent-soft:rgba(201,154,91,.10);
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family:var(--font-sans); background:var(--bg); color:var(--ink);
+  -webkit-font-smoothing:antialiased; transition:background .3s, color .3s;
+}
+::selection{ background:var(--accent-soft); color:var(--ink);}
+button{ font:inherit; color:inherit; background:none; border:none; cursor:pointer;}
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px;}
+.muted{ color:var(--muted);}
+
+/* ---------- top bar ---------- */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:22px 36px; border-bottom:1px solid var(--hairline);
+}
+.brand{ display:flex; align-items:baseline; gap:16px; min-width:0;}
+.brand-cn{ font-family:var(--font-serif); font-size:26px; letter-spacing:.14em;}
+.brand-en{ font-size:9.5px; letter-spacing:.24em; color:var(--muted); text-transform:uppercase; white-space:nowrap;}
+.icon-btn{
+  width:40px; height:40px; display:grid; place-items:center; flex-shrink:0;
+  border:1px solid var(--hairline); border-radius:999px; color:var(--ink-2); transition:border-color .15s, color .15s;
+}
+.icon-btn:hover{ border-color:var(--accent); color:var(--accent);}
+.icon-btn .icon-sun{ display:none;}
+html[data-theme="dark"] .icon-btn .icon-sun{ display:block;}
+html[data-theme="dark"] .icon-btn .icon-moon{ display:none;}
+
+/* ---------- layout ---------- */
+.app{
+  max-width:1100px; margin:0 auto; padding:56px 36px 72px;
+  display:grid; grid-template-columns:224px minmax(0,1fr); gap:64px;
+}
+
+/* ---------- rail ---------- */
+.rail{ display:flex; flex-direction:column; gap:2px; align-self:start; position:sticky; top:32px;}
+.rail-item{
+  display:flex; align-items:baseline; gap:14px; padding:10px 14px; border-radius:10px;
+  text-align:left; color:var(--ink-2); border:1px solid transparent; transition:background .15s, color .15s;
+}
+.rail-item .idx{ font-size:11px; font-variant-numeric:tabular-nums; color:var(--muted); letter-spacing:.05em;}
+.rail-item .nm{ font-size:15px;}
+.rail-item .en{ margin-left:auto; font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); white-space:nowrap;}
+.rail-item:hover{ background:var(--accent-soft); color:var(--ink);}
+.rail-item.active{ background:var(--surface); border-color:var(--hairline); box-shadow:var(--shadow); color:var(--ink);}
+.rail-item.active .idx{ color:var(--accent);}
+
+/* ---------- stage ---------- */
+.stage-head{ margin-bottom:36px;}
+.stage-head h1{ font-family:var(--font-serif); font-size:44px; font-weight:600; letter-spacing:.05em; line-height:1.1;}
+.cat-en{ margin-top:8px; font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:var(--accent);}
+.cat-desc{ margin-top:14px; font-size:13px; color:var(--muted); line-height:1.7; max-width:540px;}
+
+.card{ background:var(--surface); border:1px solid var(--hairline); border-radius:18px; box-shadow:var(--shadow);}
+.conv{ padding:26px 28px;}
+.conv-row{ display:flex; align-items:flex-end; gap:16px;}
+.conv-cell{ flex:1; min-width:0;}
+.label{ display:block; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); margin-bottom:10px;}
+.input{
+  width:100%; background:none; border:none; border-bottom:1px solid var(--hairline-2);
+  font-family:var(--font-serif); font-size:40px; color:var(--ink); padding:4px 2px 10px;
+  font-variant-numeric:tabular-nums; outline:none; transition:border-color .2s; border-radius:0;
+}
+.input:focus{ border-color:var(--accent);}
+.input::placeholder{ color:var(--muted);}
+.result{
+  font-family:var(--font-serif); font-size:44px; font-weight:600;
+  font-variant-numeric:tabular-nums; color:var(--accent-ink); line-height:1.15;
+  min-height:1.15em; word-break:break-all;
+}
+.result.empty{ color:var(--muted); font-weight:400;}
+
+.unitpick{ position:relative; min-width:158px; flex-shrink:0;}
+.dd-btn{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  width:100%; padding:13px 16px; border:1px solid var(--hairline); border-radius:12px;
+  background:var(--surface-2); transition:border-color .15s;
+}
+.dd-btn .cur{ display:flex; align-items:baseline; gap:8px; font-size:14px;}
+.dd-btn .dd-sym-cur{ font-size:11px; color:var(--muted);}
+.dd-btn svg{ color:var(--muted); transition:transform .2s; flex-shrink:0;}
+.unitpick.open .dd-btn{ border-color:var(--accent);}
+.unitpick.open .dd-btn svg{ transform:rotate(180deg);}
+.dd-list{
+  position:absolute; z-index:30; top:calc(100% + 6px); left:0; right:0;
+  background:var(--surface); border:1px solid var(--hairline); border-radius:12px;
+  box-shadow:var(--shadow); max-height:262px; overflow:auto; padding:6px;
+}
+.dd-item{
+  display:flex; align-items:center; justify-content:space-between; width:100%;
+  padding:9px 12px; border-radius:8px; font-size:14px; color:var(--ink-2); text-align:left;
+}
+.dd-item:hover, .dd-item:focus{ background:var(--accent-soft); color:var(--ink); outline:none;}
+.dd-item.active{ color:var(--accent-ink); font-weight:600;}
+.dd-item .sym{ font-size:11px; color:var(--muted); letter-spacing:.03em;}
+.dd-item.active .sym{ color:var(--accent);}
+
+.conv-mid{ display:flex; align-items:center; gap:18px; margin:20px 0;}
+.swap-btn{
+  width:38px; height:38px; border:1px solid var(--hairline); border-radius:50%;
+  display:grid; place-items:center; color:var(--muted); flex-shrink:0;
+  transition:color .2s, border-color .2s, transform .35s;
+}
+.swap-btn:hover{ color:var(--accent); border-color:var(--accent); transform:rotate(180deg);}
+.ref{ font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums;}
+.copy-btn{
+  margin-left:auto; font-size:12px; letter-spacing:.08em; padding:8px 16px;
+  border:1px solid var(--hairline); border-radius:999px; color:var(--ink-2); flex-shrink:0;
+  transition:border-color .15s, color .15s;
+}
+.copy-btn:hover{ border-color:var(--accent); color:var(--accent);}
+
+.table-cap{
+  display:flex; align-items:baseline; gap:12px; margin:30px 2px 12px;
+  font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted);
+}
+.table-cap .hint{ font-size:11px; letter-spacing:.04em; text-transform:none;}
+.table-wrap{ overflow-x:auto; border:1px solid var(--hairline); border-radius:18px; background:var(--surface); box-shadow:var(--shadow);}
+table.units{ width:100%; border-collapse:collapse; min-width:600px;}
+.units th{
+  text-align:left; font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--muted); font-weight:500; padding:16px 22px 12px; border-bottom:1px solid var(--hairline);
+}
+.units th.num, .units td.num{ text-align:right;}
+.units td{ padding:13px 22px; border-bottom:1px solid var(--hairline); font-variant-numeric:tabular-nums; font-size:14px;}
+.units tr:last-child td{ border-bottom:none;}
+.units tbody tr{ cursor:pointer; transition:background .12s;}
+.units tbody tr:hover{ background:var(--accent-soft);}
+.units tbody tr.is-from td{ color:var(--accent-ink);}
+.units .u-name{ display:flex; align-items:baseline; gap:10px;}
+.units .u-sym{ font-size:11px; color:var(--muted);}
+.units .row-copy{ opacity:0; transition:opacity .15s, color .15s; color:var(--muted); width:28px; height:28px; display:inline-grid; place-items:center; border-radius:6px; vertical-align:middle;}
+.units tbody tr:hover .row-copy, .units .row-copy:focus-visible{ opacity:1;}
+.units .row-copy:hover{ color:var(--accent);}
+@media (hover:none){ .units .row-copy{ opacity:1;} }
+
+/* ---------- footer ---------- */
+.foot{
+  max-width:1100px; margin:0 auto; padding:26px 36px 44px;
+  border-top:1px solid var(--hairline);
+  display:flex; gap:8px 28px; justify-content:space-between; flex-wrap:wrap;
+  color:var(--muted); font-size:12px; line-height:1.8;
+}
+
+/* ---------- toast ---------- */
+.toast{
+  position:fixed; left:50%; bottom:36px; transform:translate(-50%,16px);
+  background:var(--ink); color:var(--bg); font-size:13px; padding:10px 20px;
+  border-radius:999px; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
+  z-index:99; box-shadow:var(--shadow); max-width:80vw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.toast.show{ opacity:1; transform:translate(-50%,0);}
+
+/* ---------- animation ---------- */
+@keyframes rise{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:none;} }
+.stage-anim > *{ animation:rise .42s ease both;}
+.stage-anim > *:nth-child(2){ animation-delay:.05s;}
+.stage-anim > *:nth-child(3){ animation-delay:.10s;}
+.stage-anim > *:nth-child(4){ animation-delay:.14s;}
+.stage-anim > *:nth-child(5){ animation-delay:.18s;}
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{ animation:none !important; transition:none !important;}
+}
+
+/* ---------- responsive ---------- */
+@media (max-width:920px){
+  .topbar{ padding:18px 20px;}
+  .brand{ gap:10px;}
+  .brand-cn{ font-size:21px;}
+  .app{ grid-template-columns:1fr; gap:26px; padding:32px 20px 56px;}
+  .rail{ position:static; flex-direction:row; overflow-x:auto; gap:8px; padding-bottom:8px; -webkit-overflow-scrolling:touch;}
+  .rail-item{ flex-shrink:0; padding:9px 14px;}
+  .rail-item .en{ display:none;}
+  .stage-head h1{ font-size:34px;}
+  .cat-desc{ font-size:12.5px;}
+  .conv{ padding:20px 18px;}
+  .conv-row{ flex-wrap:wrap;}
+  .input, .result{ font-size:30px;}
+  .unitpick{ width:100%; min-width:0;}
+  .conv-mid{ flex-wrap:wrap; gap:14px;}
+  .copy-btn{ margin-left:0;}
+  .foot{ flex-direction:column; gap:4px; padding:22px 20px 40px;}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-cn">度量衡</span>
+    <span class="brand-en">Modern Unit Converter</span>
+  </div>
+  <button id="themeBtn" class="icon-btn" aria-label="切换深浅色模式" title="切换深浅色模式">
+    <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </button>
+</header>
+
+<main class="app">
+  <nav class="rail" id="rail" aria-label="单位类别"></nav>
+
+  <section class="stage" id="stage">
+    <header class="stage-head">
+      <h1 id="catTitle"></h1>
+      <p class="cat-en" id="catEn"></p>
+      <p class="cat-desc" id="catDesc"></p>
+    </header>
+
+    <div class="card conv">
+      <div class="conv-row">
+        <div class="conv-cell">
+          <span class="label">输入 / From</span>
+          <input class="input" id="value" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="输入数值">
+        </div>
+        <div class="unitpick" id="fromPick">
+          <button class="dd-btn" aria-haspopup="listbox" aria-label="选择来源单位">
+            <span class="cur"></span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="dd-list" role="listbox" hidden></div>
+        </div>
+      </div>
+
+      <div class="conv-mid">
+        <button class="swap-btn" id="swapBtn" aria-label="互换单位" title="互换单位">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v13M4 14l3 3 3-3M17 20V7M14 10l3-3 3 3"/></svg>
+        </button>
+        <span class="ref" id="refLine"></span>
+        <button class="copy-btn" id="copyResult" aria-label="复制换算结果">复制结果</button>
+      </div>
+
+      <div class="conv-row">
+        <div class="conv-cell">
+          <span class="label">结果 / To</span>
+          <div class="result" id="result" aria-live="polite">—</div>
+        </div>
+        <div class="unitpick" id="toPick">
+          <button class="dd-btn" aria-haspopup="listbox" aria-label="选择目标单位">
+            <span class="cur"></span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="dd-list" role="listbox" hidden></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-cap">
+      <span>全部单位换算</span>
+      <span class="hint muted">点击任意行设为目标单位 · 悬停复制</span>
+    </div>
+    <div class="table-wrap">
+      <table class="units">
+        <thead>
+          <tr><th>单位</th><th class="num">换算值</th><th class="num">对基准</th><th class="num"></th></tr>
+        </thead>
+        <tbody id="unitsBody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <p>度量衡 — 度（长度）· 量（容积）· 衡（重量）。</p>
+  <p>所有换算基于国际单位制（SI）定义，数据离线内置，可放心使用。</p>
+</footer>
+
+<div class="toast" id="toast" role="status"></div>
+<noscript><p style="padding:40px;text-align:center">此工具需要启用 JavaScript。</p></noscript>
+
+<script>
+'use strict';
+/* ============================================================
+   度量衡 — 单位换算器
+   ============================================================ */
+
+const CATS = [
+  { id:'length', name:'长度', en:'Length', baseId:'m', default:['m','cm'], desc:'米制 · 英制 · 市制，12 个单位互转。从毫米到海里，涵盖日常生活与工程常用。', units:[
+    {id:'um', name:'微米', sym:'μm', f:1e-6},
+    {id:'mm', name:'毫米', sym:'mm', f:0.001},
+    {id:'cm', name:'厘米', sym:'cm', f:0.01},
+    {id:'m',  name:'米',   sym:'m',  f:1},
+    {id:'km', name:'千米', sym:'km', f:1000},
+    {id:'in', name:'英寸', sym:'in', f:0.0254},
+    {id:'ft', name:'英尺', sym:'ft', f:0.3048},
+    {id:'yd', name:'码',   sym:'yd', f:0.9144},
+    {id:'mi', name:'英里', sym:'mi', f:1609.344},
+    {id:'nmi',name:'海里', sym:'nmi',f:1852},
+    {id:'chi',name:'市尺', sym:'尺', f:1/3},
+    {id:'li', name:'市里', sym:'里', f:500},
+  ]},
+  { id:'mass', name:'重量', en:'Mass', baseId:'kg', default:['kg','g'], desc:'公制 · 英制 · 市制，11 个单位互转。克、千克、吨，以及斤、两、磅、克拉。', units:[
+    {id:'mg', name:'毫克', sym:'mg', f:1e-6},
+    {id:'g',  name:'克',   sym:'g',  f:0.001},
+    {id:'kg', name:'千克', sym:'kg', f:1},
+    {id:'t',  name:'吨',   sym:'t',  f:1000},
+    {id:'ct', name:'克拉', sym:'ct', f:2e-4},
+    {id:'oz', name:'盎司', sym:'oz', f:0.028349523125},
+    {id:'lb', name:'磅',   sym:'lb', f:0.45359237},
+    {id:'st', name:'英石', sym:'st', f:6.35029318},
+    {id:'jin',name:'市斤', sym:'斤', f:0.5},
+    {id:'liang',name:'市两', sym:'两', f:0.05},
+    {id:'dan',name:'市担', sym:'担', f:50},
+  ]},
+  { id:'area', name:'面积', en:'Area', baseId:'m2', default:['m2','mu'], desc:'平方米、亩、公顷、英亩，11 个单位互转。买房卖地、农田规划都常用。', units:[
+    {id:'mm2', name:'平方毫米', sym:'mm²', f:1e-6},
+    {id:'cm2', name:'平方厘米', sym:'cm²', f:1e-4},
+    {id:'m2',  name:'平方米', sym:'m²', f:1},
+    {id:'km2', name:'平方千米', sym:'km²', f:1e6},
+    {id:'ha',  name:'公顷', sym:'ha', f:10000},
+    {id:'mu',  name:'市亩', sym:'亩', f:2000/3},
+    {id:'in2', name:'平方英寸', sym:'in²', f:0.00064516},
+    {id:'ft2', name:'平方英尺', sym:'ft²', f:0.09290304},
+    {id:'yd2', name:'平方码', sym:'yd²', f:0.83612736},
+    {id:'acre',name:'英亩', sym:'acre', f:4046.8564224},
+    {id:'mi2', name:'平方英里', sym:'mi²', f:2589988.110336},
+  ]},
+  { id:'volume', name:'体积', en:'Volume', baseId:'m3', default:['l','ml'], desc:'升、立方米、加仑、石油桶，11 个单位互转。厨艺、加油、物流均适用。', units:[
+    {id:'ml',  name:'毫升', sym:'mL', f:1e-6},
+    {id:'cm3', name:'立方厘米', sym:'cm³', f:1e-6},
+    {id:'l',   name:'升', sym:'L', f:0.001},
+    {id:'m3',  name:'立方米', sym:'m³', f:1},
+    {id:'in3', name:'立方英寸', sym:'in³', f:0.000016387064},
+    {id:'ft3', name:'立方英尺', sym:'ft³', f:0.028316846592},
+    {id:'yd3', name:'立方码', sym:'yd³', f:0.764554857984},
+    {id:'qt',  name:'美制夸脱', sym:'qt', f:0.000946352946},
+    {id:'gal', name:'美制加仑', sym:'gal', f:0.003785411784},
+    {id:'impgal', name:'英制加仑', sym:'imp gal', f:0.00454609},
+    {id:'bbl', name:'石油桶', sym:'bbl', f:0.158987294928},
+  ]},
+  { id:'temp', name:'温度', en:'Temperature', baseId:'K', default:['C','F'], desc:'摄氏度 · 华氏度 · 开尔文。支持负数与任意精度。', units:[
+    {id:'C', name:'摄氏度', sym:'°C', toBase:c=>c+273.15, fromBase:k=>k-273.15},
+    {id:'F', name:'华氏度', sym:'°F', toBase:f=>(f-32)*5/9+273.15, fromBase:k=>(k-273.15)*9/5+32},
+    {id:'K', name:'开尔文', sym:'K', toBase:k=>k, fromBase:k=>k},
+  ]},
+  { id:'time', name:'时间', en:'Time', baseId:'s', default:['h','min'], desc:'毫秒到年，8 个单位互转。月按 30 天、年按 365 天计。', units:[
+    {id:'ms',  name:'毫秒', sym:'ms', f:0.001},
+    {id:'s',   name:'秒', sym:'s', f:1},
+    {id:'min', name:'分钟', sym:'min', f:60},
+    {id:'h',   name:'小时', sym:'h', f:3600},
+    {id:'d',   name:'天', sym:'d', f:86400},
+    {id:'w',   name:'周', sym:'wk', f:604800},
+    {id:'mon', name:'月（30 天）', sym:'mo', f:2592000},
+    {id:'y',   name:'年（365 天）', sym:'yr', f:31536000},
+  ]},
+  { id:'speed', name:'速度', en:'Speed', baseId:'ms', default:['kmh','mph'], desc:'千米每小时、英里每小时、节与米每秒互转。', units:[
+    {id:'ms',  name:'米每秒', sym:'m/s', f:1},
+    {id:'kmh', name:'千米每小时', sym:'km/h', f:1/3.6},
+    {id:'mph', name:'英里每小时', sym:'mph', f:0.44704},
+    {id:'fps', name:'英尺每秒', sym:'ft/s', f:0.3048},
+    {id:'kn',  name:'节', sym:'kn', f:0.5144444444444445},
+  ]},
+  { id:'data', name:'数据存储', en:'Data', baseId:'B', default:['GB','MB'], desc:'位、字节到拍字节，按 1024 进制换算（1 KB = 1024 B）。', units:[
+    {id:'bit', name:'位', sym:'bit', f:0.125},
+    {id:'B',   name:'字节', sym:'B', f:1},
+    {id:'KB',  name:'千字节', sym:'KB', f:1024},
+    {id:'MB',  name:'兆字节', sym:'MB', f:1024**2},
+    {id:'GB',  name:'吉字节', sym:'GB', f:1024**3},
+    {id:'TB',  name:'太字节', sym:'TB', f:1024**4},
+    {id:'PB',  name:'拍字节', sym:'PB', f:1024**5},
+  ]},
+  { id:'pressure', name:'压力', en:'Pressure', baseId:'Pa', default:['MPa','psi'], desc:'帕斯卡、巴、大气压、毫米汞柱与 psi 互转。', units:[
+    {id:'Pa',  name:'帕斯卡', sym:'Pa', f:1},
+    {id:'kPa', name:'千帕', sym:'kPa', f:1000},
+    {id:'MPa', name:'兆帕', sym:'MPa', f:1e6},
+    {id:'bar', name:'巴', sym:'bar', f:100000},
+    {id:'atm', name:'标准大气压', sym:'atm', f:101325},
+    {id:'mmHg',name:'毫米汞柱', sym:'mmHg', f:133.322387415},
+    {id:'psi', name:'磅力每平方英寸', sym:'psi', f:6894.757293168},
+    {id:'kgf', name:'千克力每平方厘米', sym:'kgf/cm²', f:98066.5},
+  ]},
+  { id:'power', name:'功率', en:'Power', baseId:'W', default:['kW','hp_m'], desc:'瓦、千瓦、马力与空调「匹」互转。', units:[
+    {id:'W',   name:'瓦', sym:'W', f:1},
+    {id:'kW',  name:'千瓦', sym:'kW', f:1000},
+    {id:'MW',  name:'兆瓦', sym:'MW', f:1e6},
+    {id:'hp_m',name:'公制马力', sym:'hp', f:735.49875},
+    {id:'hp_i',name:'英制马力', sym:'hp', f:745.6998715822702},
+    {id:'pi',  name:'匹（空调）', sym:'匹', f:735.49875},
+  ]},
+  { id:'energy', name:'能量', en:'Energy', baseId:'J', default:['kcal','kJ'], desc:'焦耳、卡路里、千瓦时（度）与 BTU 互转。', units:[
+    {id:'J',   name:'焦耳', sym:'J', f:1},
+    {id:'kJ',  name:'千焦', sym:'kJ', f:1000},
+    {id:'MJ',  name:'兆焦', sym:'MJ', f:1e6},
+    {id:'cal', name:'卡路里', sym:'cal', f:4.184},
+    {id:'kcal',name:'千卡', sym:'kcal', f:4184},
+    {id:'kwh', name:'千瓦时', sym:'kWh', f:3600000},
+    {id:'btu', name:'英热单位', sym:'BTU', f:1055.05585262},
+  ]},
+  { id:'angle', name:'角度', en:'Angle', baseId:'rad', default:['deg','rad'], desc:'度、弧度、角分、角秒与百分度互转。', units:[
+    {id:'deg',  name:'度', sym:'°', f:Math.PI/180},
+    {id:'rad',  name:'弧度', sym:'rad', f:1},
+    {id:'arcmin',name:'角分', sym:'′', f:Math.PI/10800},
+    {id:'arcsec',name:'角秒', sym:'″', f:Math.PI/648000},
+    {id:'grad', name:'百分度', sym:'gon', f:Math.PI/200},
+  ]},
+];
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const state = {
+  cat: 'length', from: null, to: null, value: '1',
+  theme: localStorage.getItem('dh_theme') ||
+    (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+};
+
+function getCat(id){ return CATS.find(c => c.id === id); }
+function getUnit(cat, id){ return cat.units.find(u => u.id === id); }
+function toBase(cat, unit, v){ return unit.toBase ? unit.toBase(v) : v * unit.f; }
+function fromBase(cat, unit, v){ return unit.fromBase ? unit.fromBase(v) : v / unit.f; }
+function convert(cat, fid, tid, v){
+  const fu = getUnit(cat, fid), tu = getUnit(cat, tid);
+  if (!fu || !tu) return NaN;
+  return fromBase(cat, tu, toBase(cat, fu, v));
+}
+function currentValue(){
+  const raw = state.value.trim();
+  if (!raw) return null;
+  const n = parseFloat(raw.replace(/[,\s\u00a0]/g, ''));
+  return isFinite(n) ? n : null;
+}
+
+function fmt(n){
+  if (n === null || n === undefined || !isFinite(n)) return '—';
+  if (n === 0) return '0';
+  const abs = Math.abs(n);
+  if (abs >= 1e13 || abs < 1e-9){
+    return n.toExponential(8).replace(/\.?0+e/, 'e').replace('e+', 'e');
+  }
+  let s = Number(n.toPrecision(12)).toString();
+  if (s.indexOf('e') !== -1) return s.replace('e+', 'e');
+  const parts = s.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return parts.join('.');
+}
+
+/* ---------- toast / copy ---------- */
+let toastTimer;
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1700);
+}
+function fallbackCopy(text, done){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand('copy'); done(); }catch(e){}
+  document.body.removeChild(ta);
+}
+function copyText(text){
+  const done = () => toast('已复制：' + text);
+  if (navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
+}
+
+/* ---------- render ---------- */
+const ICONS = {
+  copy: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
+};
+
+function renderRail(){
+  $('#rail').innerHTML = CATS.map((c, i) =>
+    `<button class="rail-item ${c.id === state.cat ? 'active' : ''}" data-id="${c.id}" aria-current="${c.id === state.cat}">
+       <span class="idx">${String(i + 1).padStart(2, '0')}</span>
+       <span class="nm">${c.name}</span>
+       <span class="en">${c.en}</span>
+     </button>`).join('');
+}
+
+function renderHead(){
+  const c = getCat(state.cat);
+  $('#catTitle').textContent = c.name;
+  $('#catEn').textContent = c.en;
+  $('#catDesc').textContent = c.desc;
+}
+
+function renderPick(pickId){
+  const c = getCat(state.cat);
+  const selId = pickId === 'fromPick' ? state.from : state.to;
+  const wrap = $('#' + pickId);
+  const u = getUnit(c, selId);
+  wrap.querySelector('.cur').innerHTML = `<span>${u.name}</span><span class="dd-sym-cur">${u.sym}</span>`;
+  wrap.querySelector('.dd-list').innerHTML = c.units.map(unit =>
+    `<button class="dd-item ${unit.id === selId ? 'active' : ''}" data-id="${unit.id}" role="option" aria-selected="${unit.id === selId}" tabindex="-1">
+       <span class="nm">${unit.name}</span><span class="sym">${unit.sym}</span>
+     </button>`).join('');
+}
+
+function renderResult(){
+  const c = getCat(state.cat);
+  const v = currentValue();
+  const fu = getUnit(c, state.from), tu = getUnit(c, state.to);
+  const r = v === null ? null : convert(c, state.from, state.to, v);
+  const el = $('#result');
+  if (r === null){ el.textContent = '—'; el.classList.add('empty'); }
+  else { el.textContent = fmt(r); el.classList.remove('empty'); }
+  $('#refLine').textContent = `1 ${fu.sym} = ${fmt(convert(c, state.from, state.to, 1))} ${tu.sym}`;
+}
+
+function renderTable(){
+  const c = getCat(state.cat);
+  const v = currentValue();
+  const fu = getUnit(c, state.from);
+  $('#unitsBody').innerHTML = c.units.map(u => {
+    const val = fmt(convert(c, state.from, u.id, v === null ? 1 : v));
+    const perBase = fmt(convert(c, u.id, c.baseId, 1));
+    return `<tr class="${u.id === state.from ? 'is-from' : ''}" data-id="${u.id}" tabindex="0">
+      <td><span class="u-name"><span>${u.name}</span><span class="u-sym">${u.sym}</span></span></td>
+      <td class="num val">${val}</td>
+      <td class="num muted">${perBase}</td>
+      <td class="num"><button class="row-copy" data-id="${u.id}" aria-label="复制 ${u.name} 的换算结果" title="复制">${ICONS.copy}</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function render(){
+  renderRail();
+  renderHead();
+  renderPick('fromPick');
+  renderPick('toPick');
+  renderResult();
+  renderTable();
+}
+
+function animateStage(){
+  const s = $('#stage');
+  s.classList.remove('stage-anim');
+  void s.offsetWidth;
+  s.classList.add('stage-anim');
+}
+
+/* ---------- theme ---------- */
+function applyTheme(t){
+  document.documentElement.dataset.theme = t;
+  state.theme = t;
+  try{ localStorage.setItem('dh_theme', t); }catch(e){}
+}
+$('#themeBtn').addEventListener('click', () => applyTheme(state.theme === 'dark' ? 'light' : 'dark'));
+
+/* ---------- category rail ---------- */
+$('#rail').addEventListener('click', e => {
+  const b = e.target.closest('.rail-item');
+  if (!b || b.dataset.id === state.cat) return;
+  const c = getCat(b.dataset.id);
+  state.cat = c.id;
+  const def = c.default || [c.units[0].id, (c.units[1] || c.units[0]).id];
+  state.from = def[0];
+  state.to = def[1];
+  try{ localStorage.setItem('dh_cat', c.id); }catch(e){}
+  render();
+  animateStage();
+});
+
+/* ---------- input ---------- */
+const valueInput = $('#value');
+valueInput.addEventListener('input', () => {
+  state.value = valueInput.value;
+  try{ localStorage.setItem('dh_value', state.value); }catch(e){}
+  renderResult();
+  renderTable();
+});
+
+/* ---------- swap / copy ---------- */
+$('#swapBtn').addEventListener('click', () => {
+  [state.from, state.to] = [state.to, state.from];
+  try{ localStorage.setItem('dh_from', state.from); localStorage.setItem('dh_to', state.to); }catch(e){}
+  renderPick('fromPick');
+  renderPick('toPick');
+  renderResult();
+  renderTable();
+});
+
+$('#copyResult').addEventListener('click', () => {
+  const c = getCat(state.cat);
+  const v = currentValue() ?? 1;
+  const fu = getUnit(c, state.from), tu = getUnit(c, state.to);
+  copyText(`${fmt(v)} ${fu.name} = ${fmt(convert(c, state.from, state.to, v))} ${tu.name}`);
+});
+
+/* ---------- dropdowns ---------- */
+let openPick = null;
+function closePicks(){
+  document.querySelectorAll('.unitpick.open').forEach(w => {
+    w.classList.remove('open');
+    const list = w.querySelector('.dd-list');
+    if (list) list.hidden = true;
+  });
+  openPick = null;
+}
+function openPickEl(id){
+  closePicks();
+  const w = $('#' + id);
+  w.classList.add('open');
+  openPick = id;
+  const list = w.querySelector('.dd-list');
+  list.hidden = false;
+  const active = list.querySelector('.dd-item.active') || list.firstElementChild;
+  if (active) active.focus();
+}
+function afterPick(pickId, id){
+  if (pickId === 'fromPick') state.from = id; else state.to = id;
+  try{ localStorage.setItem(pickId === 'fromPick' ? 'dh_from' : 'dh_to', id); }catch(e){}
+  renderPick(pickId);
+  renderResult();
+  renderTable();
+  closePicks();
+}
+
+document.querySelectorAll('.dd-btn').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const id = btn.closest('.unitpick').id;
+    if (openPick === id) closePicks();
+    else openPickEl(id);
+  });
+});
+
+document.querySelectorAll('.dd-list').forEach(list => {
+  list.addEventListener('click', e => {
+    const it = e.target.closest('.dd-item');
+    if (!it) return;
+    afterPick(list.closest('.unitpick').id, it.dataset.id);
+  });
+  list.addEventListener('keydown', e => {
+    if (e.key === 'Escape'){ closePicks(); return; }
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    const items = [...list.querySelectorAll('.dd-item')];
+    let i = items.indexOf(document.activeElement);
+    i = e.key === 'ArrowDown' ? (i + 1) % items.length : (i - 1 + items.length) % items.length;
+    items[i].focus();
+  });
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.unitpick')) closePicks();
+});
+
+/* ---------- table interactions ---------- */
+$('#unitsBody').addEventListener('click', e => {
+  const row = e.target.closest('tr');
+  if (!row) return;
+  const c = getCat(state.cat);
+  const id = row.dataset.id;
+  const tu = getUnit(c, id);
+  if (e.target.closest('.row-copy')){
+    const v = currentValue() ?? 1;
+    const fu = getUnit(c, state.from);
+    copyText(`${fmt(v)} ${fu.name} = ${fmt(convert(c, state.from, id, v))} ${tu.name}`);
+    return;
+  }
+  state.to = id;
+  try{ localStorage.setItem('dh_to', id); }catch(e){}
+  renderPick('toPick');
+  renderResult();
+  toast(`已选择换算目标：${tu.name}`);
+});
+$('#unitsBody').addEventListener('keydown', e => {
+  if (e.target.closest('.row-copy')) return;
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  e.preventDefault();
+  const row = e.target.closest('tr');
+  if (!row) return;
+  const c = getCat(state.cat);
+  const tu = getUnit(c, row.dataset.id);
+  state.to = row.dataset.id;
+  try{ localStorage.setItem('dh_to', state.to); }catch(e){}
+  renderPick('toPick');
+  renderResult();
+  toast(`已选择换算目标：${tu.name}`);
+});
+
+/* ---------- init ---------- */
+(function init(){
+  applyTheme(state.theme);
+  const savedCat = localStorage.getItem('dh_cat');
+  const c = savedCat && getCat(savedCat) ? getCat(savedCat) : getCat('length');
+  state.cat = c.id;
+  const def = c.default || [c.units[0].id, (c.units[1] || c.units[0]).id];
+  const savedFrom = localStorage.getItem('dh_from');
+  const savedTo = localStorage.getItem('dh_to');
+  state.from = savedFrom && getUnit(c, savedFrom) ? savedFrom : def[0];
+  state.to = savedTo && getUnit(c, savedTo) && savedTo !== state.from ? savedTo : def[1];
+  const savedVal = localStorage.getItem('dh_value');
+  state.value = savedVal !== null && savedVal !== '' ? savedVal : '1';
+  valueInput.value = state.value;
+  render();
+})();
+
+/* verification hooks */
+window.__test = { CATS, convert, fmt, getCat, getUnit, state };
+</script>
+</body>
+</html>
